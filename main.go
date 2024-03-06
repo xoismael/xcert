@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 )
 
 func prep_input(user_input string) (output string) {
-	pattern := `^([0-9a-zA-Z-.]+)+\:?([0-9]{1,5})?`
+	pattern := `^([0-9a-zA-Z-.]+)+\:+([0-9]{1,5})$`
 
 	rp := regexp.MustCompile(pattern)
 	groups := rp.FindAllStringSubmatch(user_input, -1)
@@ -19,19 +20,24 @@ func prep_input(user_input string) (output string) {
 		for _, group := range groups {
 			hostname := group[1]
 			port := group[2]
-			switch port {
-			case "443":
-				output = fmt.Sprintf("https://%s", hostname)
-			case "80":
-				output = fmt.Sprintf("http://%s", hostname)
-			default:
-				output = fmt.Sprintf("https://%s:%s", hostname, port)
+			if len(strings.TrimSpace(port)) == 0 {
+				fmt.Println("No port specified")
+				break
+			} else {
+				switch port {
+				case "443":
+					output = fmt.Sprintf("https://%s", hostname)
+				case "80":
+					output = fmt.Sprintf("http://%s", hostname)
+				default:
+					output = fmt.Sprintf("https://%s:%s", hostname, port)
+				}
 			}
 
 		}
 
 	} else {
-		fmt.Println("No match found")
+		fmt.Println("Not a valid host")
 	}
 	return
 
@@ -51,7 +57,7 @@ func main() {
 		}
 		resp, err := client.Get(url)
 		if err != nil {
-			fmt.Printf("Error: Can't make Get request: %s", err)
+			continue
 		}
 		if resp.TLS == nil {
 			continue
