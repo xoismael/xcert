@@ -12,7 +12,7 @@ import (
 )
 
 func prep_input(user_input string) (output string) {
-	pattern := `^([0-9a-zA-Z-.]+)+\:+([0-9]{1,5})$`
+	pattern := `^([0-9a-zA-Z-.]+)+\:?([0-9]{1,5})$`
 
 	rp := regexp.MustCompile(pattern)
 	groups := rp.FindAllStringSubmatch(user_input, -1)
@@ -37,7 +37,7 @@ func prep_input(user_input string) (output string) {
 		}
 
 	} else {
-		fmt.Println("Not a valid host")
+		fmt.Println("Input should be in the form of <host:port>")
 	}
 	return
 
