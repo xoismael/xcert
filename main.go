@@ -1,0 +1,63 @@
+package main
+
+import (
+	"bufio"
+	"crypto/tls"
+	"fmt"
+	"net/http"
+	"os"
+	"regexp"
+	"time"
+)
+
+func prep_input(user_input string) (output string) {
+	pattern := `^([0-9a-zA-Z-.]+)+\:?([0-9]{1,5})?`
+
+	rp := regexp.MustCompile(pattern)
+	groups := rp.FindAllStringSubmatch(user_input, -1)
+	if len(groups) > 0 {
+		for _, group := range groups {
+			hostname := group[1]
+			port := group[2]
+			switch port {
+			case "443":
+				output = fmt.Sprintf("https://%s", hostname)
+			case "80":
+				output = fmt.Sprintf("http://%s", hostname)
+			default:
+				output = fmt.Sprintf("https://%s:%s", hostname, port)
+			}
+
+		}
+
+	} else {
+		fmt.Println("No match found")
+	}
+	return
+
+}
+
+func main() {
+	sc := bufio.NewScanner(os.Stdin)
+	for sc.Scan() {
+		url := prep_input(sc.Text())
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+			Timeout: time.Second * 10,
+		}
+		resp, err := client.Get(url)
+		if err != nil {
+			fmt.Printf("Error: Can't make Get request: %s", err)
+		}
+		if resp.TLS == nil {
+			continue
+		}
+		cert := resp.TLS.PeerCertificates[0]
+		fmt.Printf("%s\t%s %s\n", url, cert.Subject.CommonName, cert.Subject.Organization)
+		defer resp.Body.Close()
+	}
+}
