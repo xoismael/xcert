@@ -8,7 +8,7 @@ go install github.com/xoismael/xcert@latest
 
 # Basic Usage:
 ```
-echo example.com | xcert
+echo example.com:443 | xcert
 ```
 or
 ```
